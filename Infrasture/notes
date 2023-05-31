@@ -1,0 +1,20 @@
+
+# Install
+
+npx serverless plugin install -n serverless-dotenv-plugin
+npx serverless plugin install -n serverless-python-requirements
+npx serverless plugin install -n serverless-glue
+
+
+
+{
+  "tip_id": {
+    "S": "1"
+  },
+  "ride_id": {
+    "S": "4"
+  },
+  "tip_amount": {
+    "S": "12.5"
+  }
+}

@@ -1,0 +1,415 @@
+service: hudi-rides
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.7
+  memorySize: 512
+  timeout: 600
+  architecture: x86_64
+  stackTags:
+    product: datateam
+    env: qa
+    created-date: 2022-04-26
+    team: python-dev
+    customer-impact: false
+    terraform: false
+
+useDotenv: true
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-python-requirements
+  - serverless-glue
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    zip: true
+
+functions:
+
+  rides:
+    name: rides-dynamodb-preprocessor
+    handler: LambdaFunctions/rides.lambda_handler
+    environment:
+      DEV_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
+      DEV_SECRET_KEY: ${env:DEV_SECRET_KEY}
+      DEV_AWS_REGION_NAME: ${env:DEV_AWS_REGION_NAME}
+      BUCKET: ${env:BUCKET}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DynamoDBRidesTable
+              - StreamArn
+          batchSize: ${env:BATCH_SIZE}
+          startingPosition: LATEST
+          maximumRetryAttempts: 10
+
+  tips:
+    name: tips-dynamodb-preprocessor
+    handler: LambdaFunctions/tips.lambda_handler
+    environment:
+      DEV_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
+      DEV_SECRET_KEY: ${env:DEV_SECRET_KEY}
+      DEV_AWS_REGION_NAME: ${env:DEV_AWS_REGION_NAME}
+      BUCKET: ${env:BUCKET}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DynamoDBTipsTable
+              - StreamArn
+          batchSize: ${env:BATCH_SIZE}
+          startingPosition: LATEST
+          maximumRetryAttempts: 10
+
+  drivers:
+    name: drivers-dynamodb-preprocessor
+    handler: LambdaFunctions/driver.lambda_handler
+    environment:
+      DEV_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
+      DEV_SECRET_KEY: ${env:DEV_SECRET_KEY}
+      DEV_AWS_REGION_NAME: ${env:DEV_AWS_REGION_NAME}
+      BUCKET: ${env:BUCKET}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DynamoDBDriverTable
+              - StreamArn
+          batchSize: ${env:BATCH_SIZE}
+          startingPosition: LATEST
+          maximumRetryAttempts: 10
+
+  users:
+    name: users-dynamodb-preprocessor
+    handler: LambdaFunctions/users.lambda_handler
+    environment:
+      DEV_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
+      DEV_SECRET_KEY: ${env:DEV_SECRET_KEY}
+      DEV_AWS_REGION_NAME: ${env:DEV_AWS_REGION_NAME}
+      BUCKET: ${env:BUCKET}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DynamoDBUsersTable
+              - StreamArn
+          batchSize: ${env:BATCH_SIZE}
+          startingPosition: LATEST
+          maximumRetryAttempts: 10
+
+  glue-jobs-failed:
+    handler: handler.lambda_handler
+    environment:
+      TopicArn: arn:aws:sns:${aws:region}:${aws:accountId}:${env:TopicName}
+      DEV_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
+      DEV_SECRET_KEY: ${env:DEV_SECRET_KEY}
+      DEV_REGION: ${env:DEV_AWS_REGION_NAME}
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - aws.glue
+            detail-type:
+              - "Glue Job State Change"
+            detail:
+              state:
+                - 'FAILED'
+                - 'STOPPED'
+                - 'Stopped'
+
+
+resources:
+  Resources:
+
+    MySubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: ${env:EMAIL_ALERT}
+        Protocol: email
+        TopicArn: !Ref 'SNSTopic'
+
+    SNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${env:TopicName}
+
+    DynamoDBTipsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMO_DB_TABLE_NAME_TIPS}
+        AttributeDefinitions:
+          - AttributeName: tip_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tip_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableClass: STANDARD
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+    DynamoDBRidesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMO_DB_TABLE_NAME_RIDES}
+        AttributeDefinitions:
+          - AttributeName: ride_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ride_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableClass: STANDARD
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+    DynamoDBDriverTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMO_DB_TABLE_NAME_DRIVERS}
+        AttributeDefinitions:
+          - AttributeName: driver_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: driver_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableClass: STANDARD
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+    DynamoDBUsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMO_DB_TABLE_NAME_USERS}
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableClass: STANDARD
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+    IamGlueRole:
+      Type: 'AWS::IAM::Role'
+      Properties:
+        RoleName: GlueInteractiveSessionRole
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - glue.amazonaws.com
+              Action:
+                - 'sts:AssumeRole'
+        Policies:
+          - PolicyName: "GlueInteractiveSessionPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Sid: AllowStatementInASessionToAUser
+                  Action:
+                    - 'glue:*'
+                  Effect: Allow
+                  Resource: '*'
+                - Action:
+                    - 'iam:PassRole'
+                  Effect: Allow
+                  Resource: 'arn:aws:iam::*:role/GlueInteractiveSessionRole*'
+                  Condition:
+                    StringLike:
+                      'iam:PassedToService':
+                        - 'glue.amazonaws.com'
+          - PolicyName: "S3AccessPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action:
+                    - 's3:*'
+                  Effect: Allow
+                  Resource:
+                    - 'arn:aws:s3:::*'
+                    - 'arn:aws:s3:::*/*'
+          - PolicyName: "EC2AccessPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action:
+                    - 'ec2:DescribeVpcEndpoints'
+                    - 'ec2:DescribeRouteTables'
+                    - 'ec2:CreateNetworkInterface'
+                    - 'ec2:DeleteNetworkInterface'
+                    - 'ec2:DescribeNetworkInterfaces'
+                    - 'ec2:DescribeSecurityGroups'
+                    - 'ec2:DescribeSubnets'
+                    - 'ec2:DescribeVpcAttribute'
+                    - 'ec2:CreateTags'
+                    - 'ec2:DeleteTags'
+                  Effect: Allow
+                  Resource:
+                    - 'arn:aws:ec2:*:*:network-interface/*'
+                    - 'arn:aws:ec2:*:*:security-group/*'
+                    - 'arn:aws:ec2:*:*:instance/*'
+          - PolicyName: "CloudWatchAccessPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action:
+                    - 'cloudwatch:PutMetricData'
+                  Effect: Allow
+                  Resource: '*'
+          - PolicyName: "IAMAccessPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action:
+                    - 'iam:ListRolePolicies'
+                    - 'iam:GetRole'
+                    - 'iam:GetRolePolicy'
+                  Effect: Allow
+                  Resource: '*'
+
+
+#    GlueDatabaseUber:
+#      Type: AWS::Glue::Database
+#      Properties:
+#        CatalogId: ${aws:accountId}
+#        DatabaseInput:
+#          Name: ${env:GLUE_DATABASE}
+
+
+
+
+Glue:
+  bucketDeploy: ${env:BUCKET}
+  createBucket : true
+  jobs:
+    - name: "create_hudi_table_template"
+      scriptPath: "./GLueJobs/create_hudi_table_template.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 3
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/create_hudi_table_template.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+    - name: "incremental_ingestion"
+      scriptPath: "./GLueJobs/incremental_ingestion.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 3
+      DefaultArguments:
+        BUCKET_NAME : ${env:BUCKET}
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/incremental_ingestion.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+    - name: "date_dims"
+      scriptPath: "./GLueJobs/date_dims.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 3
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          BUCKET_NAME : ${env:BUCKET}
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/date_dims.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+    - name: "save_points"
+      scriptPath: "./GLueJobs/save_points.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 3
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          GLUE_DATABASE : "uber"
+          GLUE_TABLE_NAME : 'rides'
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/save_points.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+
+  triggers:
+    - name: ingestion-pipeline # Required
+      Description: "Hudi ingestion pipeline"
+      StartOnCreation: False
+      schedule: 0 8 * * ? *
+      actions:
+        - name: "create_hudi_table_template"
+        - name: "incremental_ingestion"
+        - name: "date_dims"
+        - name: "save_points"

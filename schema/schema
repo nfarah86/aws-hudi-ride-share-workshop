@@ -1,0 +1,114 @@
+
+// Partition :  pick_up_state
+// Index Type: SIMPLE INDEX
+// TABLE TYPE: COW
+// HIVE SYNC TRUE
+// CLEANER ASYNC
+// METADATA MAYBE
+// CLUSTERING NO
+Table rides {
+    ride_id uuid
+    user_id int
+    driver_id int
+    ride_date date
+    ride_time time
+    pickup_location varchar
+    pick_up_city varchar
+    pick_up_state varchar
+    dropoff_location varchar
+    distance_travelled float
+    ride_duration time
+    fare float
+    }
+
+// Partition :  NO
+// SLOWLY CHANGING DIMENSION TYPE  2 SCD (HOLD TO BE DISCUSSED ????)
+// Index Type: BLOOM NON GLOBAL
+// TABLE TYPE: COW
+// HIVE SYNC TRUE
+// CLEANER INLINE TRUE
+// METADATA NO
+// CLUSTERING NO
+Table users{
+  user_id int
+  name varchar
+  city varchar
+  state varchar
+  phone_number varchar
+  email varchar
+}
+
+// Partition :  NO
+// Index Type: BLOOM NON GLOBAL
+// TABLE TYPE: COW
+// HIVE SYNC TRUE
+// CLEANER INLINE FALSE
+// METADATA NO
+// CLUSTERING NO
+Table tips {
+    tip_id int [pk, increment]
+    ride_id int
+    tip_amount float
+}
+
+
+STATIC
+Table drivers {
+    driver_id int [pk, increment]
+    name varchar
+    phone_number varchar
+    email varchar
+    city varchar
+    state varchar
+    car_make varchar
+    car_model varchar
+    license_plate varchar
+    avg_rating float
+}
+
+
+Table dim_date {
+  date_key int [pk]
+  year int
+  month int
+  day int
+  quarter int
+  weekday varchar
+  weekday_number int
+}
+
+EDGE CASE
+---------------
+A) You have tips and you have rides INNER JOIN
+B) You have no rides but you have tips
+---------------
+// Partition :  NO
+// Index Type: NON GLOBAL SIMPLE
+// TABLE TYPE: COW
+// HIVE SYNC TRUE
+// CLEANER INLINE TRUE
+// METADATA NO
+// CLUSTERING NO
+Table driver_earnings {
+  driver_id         int
+  ride_id           int
+  fare              float
+  total_amount      float
+  tip_amount        float
+  earning_date_key  date
+}
+
+
+
+
+
+
+Ref: "driver_earnings"."driver_id" < "drivers"."driver_id"
+
+Ref: "driver_earnings"."ride_id" < "rides"."ride_date"
+
+Ref: "driver_earnings"."earning_date_key" < "dim_date"."date_key"
+
+Ref: "users"."user_id" < "rides"."user_id"
+
+Ref: "rides"."ride_id" < "tips"."ride_id"
