@@ -46,6 +46,7 @@ BUCKET_NAME = args['BUCKET_NAME']
 rides_path = f"s3://{BUCKET_NAME}/silver/table_name=rides/"
 tips_path = f"s3://{BUCKET_NAME}/silver/table_name=tips/"
 driver_earnings = f"s3://{BUCKET_NAME}/gold/table_name=driver_earnings/"
+date_dimensions = f"s3://{BUCKET_NAME}/silver/table_name=dim_date/"
 
 spark = (SparkSession.builder.config('spark.serializer', 'org.apache.spark.serializer.KryoSerializer') \
          .config('spark.sql.hive.convertMetastoreParquet', 'false') \
@@ -361,19 +362,22 @@ inc_rides_df.createOrReplaceTempView("rides")
 inc_tips_df.createOrReplaceTempView("tips")
 
 # ==============DATE DIM ======================================================================================
-min_date = '2000-01-01'
-max_date = '2025-01-01'
-date_range = pd.date_range(start=min_date, end=max_date)
-date_data = [(int(day.strftime('%Y%m%d')), day.year, day.month, day.day, str((day.month - 1) // 3 + 1),
-              day.strftime('%A'), day.weekday()) for day in date_range]
-date_schema = ['date_key', 'year', 'month', 'day', 'quarter', 'weekday', 'weekday_number']
-date_dim_df = spark.createDataFrame(date_data, schema=date_schema)
-date_dim_df.createOrReplaceTempView("date_dim")
+
+# min_date = '2000-01-01'
+# max_date = '2025-01-01'
+# date_range = pd.date_range(start=min_date, end=max_date)
+# date_data = [(int(day.strftime('%Y%m%d')), day.year, day.month, day.day, str((day.month - 1) // 3 + 1),
+#               day.strftime('%A'), day.weekday()) for day in date_range]
+# date_schema = ['date_key', 'year', 'month', 'day', 'quarter', 'weekday', 'weekday_number']
+# date_dim_df = spark.createDataFrame(date_data, schema=date_schema)
+# date_dim_df.createOrReplaceTempView("date_dim")
+
+spark.read.format("hudi").load(date_dimensions).createOrReplaceTempView("date_dim")
+
 # ================================================================================================================
 
 
 if inc_rides_df.count() > 0:
-
     earning_fact_df = spark.sql("""
     SELECT
         r.driver_id,

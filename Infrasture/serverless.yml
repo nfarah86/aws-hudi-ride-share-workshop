@@ -106,7 +106,7 @@ functions:
           maximumRetryAttempts: 10
 
   glue-jobs-failed:
-    handler: handler.lambda_handler
+    handler: LambdaFunctions/handler.lambda_handler
     environment:
       TopicArn: arn:aws:sns:${aws:region}:${aws:accountId}:${env:TopicName}
       DEV_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
@@ -291,12 +291,12 @@ resources:
                   Resource: '*'
 
 
-#    GlueDatabaseUber:
-#      Type: AWS::Glue::Database
-#      Properties:
-#        CatalogId: ${aws:accountId}
-#        DatabaseInput:
-#          Name: ${env:GLUE_DATABASE}
+    GlueDatabaseUber:
+      Type: AWS::Glue::Database
+      Properties:
+        CatalogId: ${aws:accountId}
+        DatabaseInput:
+          Name: ${env:GLUE_DATABASE}
 
 
 
@@ -386,7 +386,7 @@ Glue:
         enableGlueDatacatalog: True
         jobBookmarkOption: "job-bookmark-enable"
         customArguments:
-          GLUE_DATABASE : "uber"
+          GLUE_DATABASE : ${env:GLUE_DATABASE}
           GLUE_TABLE_NAME : 'rides'
           job-bookmark-option: "job-bookmark-enable"
           datalake-formats: "hudi"
