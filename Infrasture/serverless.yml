@@ -309,7 +309,7 @@ Glue:
       scriptPath: "./GLueJobs/create_hudi_table_template.py"
       type: spark
       glueVersion: python3-4.0
-      MaxConcurrentRuns: 3
+      MaxConcurrentRuns: 5
       DefaultArguments:
         enableGlueDatacatalog: True
         jobBookmarkOption: "job-bookmark-enable"
@@ -319,7 +319,7 @@ Glue:
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
       role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
       WorkerType: G.1X
-      NumberOfWorkers: 10
+      NumberOfWorkers: 15
       Timeout: 2880
       MaxRetries: 0
       SupportFiles:
@@ -334,11 +334,11 @@ Glue:
       glueVersion: python3-4.0
       MaxConcurrentRuns: 3
       DefaultArguments:
-        BUCKET_NAME : ${env:BUCKET}
         enableGlueDatacatalog: True
         jobBookmarkOption: "job-bookmark-enable"
         customArguments:
-
+          BUCKET_NAME : ${env:BUCKET}
+          DATABASE_NAME : ${env:GLUE_DATABASE}
           job-bookmark-option: "job-bookmark-enable"
           datalake-formats: "hudi"
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"

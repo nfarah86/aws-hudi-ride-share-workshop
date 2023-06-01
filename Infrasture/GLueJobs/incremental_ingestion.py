@@ -36,7 +36,8 @@ curr_region = curr_session.region_name
 args = getResolvedOptions(
     sys.argv, [
         'JOB_NAME',
-        'BUCKET_NAME'
+        'BUCKET_NAME',
+        'DATABASE_NAME'
     ],
 )
 
@@ -362,18 +363,7 @@ inc_rides_df.createOrReplaceTempView("rides")
 inc_tips_df.createOrReplaceTempView("tips")
 
 # ==============DATE DIM ======================================================================================
-
-# min_date = '2000-01-01'
-# max_date = '2025-01-01'
-# date_range = pd.date_range(start=min_date, end=max_date)
-# date_data = [(int(day.strftime('%Y%m%d')), day.year, day.month, day.day, str((day.month - 1) // 3 + 1),
-#               day.strftime('%A'), day.weekday()) for day in date_range]
-# date_schema = ['date_key', 'year', 'month', 'day', 'quarter', 'weekday', 'weekday_number']
-# date_dim_df = spark.createDataFrame(date_data, schema=date_schema)
-# date_dim_df.createOrReplaceTempView("date_dim")
-
 spark.read.format("hudi").load(date_dimensions).createOrReplaceTempView("date_dim")
-
 # ================================================================================================================
 
 
@@ -417,7 +407,6 @@ if inc_rides_df.count() == 0 and inc_tips_df.count() > 0:
             de.driver_id,
             de.ride_id,
             de.fare,
-            de.total_amount,
             COALESCE(t.tip_amount, 0) AS tip_amount,
             (de.fare + COALESCE(t.tip_amount, 0)) AS total_amount,
             de.earning_date_key
@@ -428,7 +417,7 @@ if inc_rides_df.count() == 0 and inc_tips_df.count() > 0:
     """)
 
     upsert_hudi_table(
-        db_name="uber",
+        db_name=args['DATABASE_NAME'],
         table_name="driver_earnings",
         record_id="driver_id,ride_id",
         precomb_key="ride_id",
