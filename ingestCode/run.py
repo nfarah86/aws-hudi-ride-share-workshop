@@ -123,6 +123,8 @@ def generate_drivers(num_records):
 class RideModel(Model):
     class Meta:
         table_name = os.getenv("DYNAMO_DB_TABLE_NAME_RIDES")
+        aws_access_key_id =os.getenv("DEV_ACCESS_KEY")
+        aws_secret_access_key = os.getenv("DEV_SECRET_KEY")
         region = 'us-east-1'
 
     ride_id = UnicodeAttribute(hash_key=True)
@@ -142,6 +144,8 @@ class RideModel(Model):
 class TipsModel(Model):
     class Meta:
         table_name = os.getenv("DYNAMO_DB_TABLE_NAME_TIPS")
+        aws_access_key_id =os.getenv("DEV_ACCESS_KEY")
+        aws_secret_access_key = os.getenv("DEV_SECRET_KEY")
         region = 'us-east-1'
 
     tip_id = UnicodeAttribute(hash_key=True)
@@ -152,6 +156,8 @@ class TipsModel(Model):
 class DriverModel(Model):
     class Meta:
         table_name = os.getenv("DYNAMO_DB_TABLE_NAME_DRIVERS")
+        aws_access_key_id =os.getenv("DEV_ACCESS_KEY")
+        aws_secret_access_key = os.getenv("DEV_SECRET_KEY")
         region = 'us-east-1'  # Replace with your desired AWS region
 
     driver_id = UnicodeAttribute(hash_key=True)
@@ -170,6 +176,8 @@ class DriverModel(Model):
 class UserModel(Model):
     class Meta:
         table_name = os.getenv("DYNAMO_DB_TABLE_NAME_USERS")  # Replace with your desired table name
+        aws_access_key_id =os.getenv("DEV_ACCESS_KEY")
+        aws_secret_access_key = os.getenv("DEV_SECRET_KEY")
         region = 'us-east-1'  # Replace with your desired AWS region
 
     user_id = UnicodeAttribute(hash_key=True)
