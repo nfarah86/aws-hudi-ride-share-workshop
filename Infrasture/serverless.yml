@@ -292,13 +292,13 @@ resources:
                   Effect: Allow
                   Resource: '*'
 
-    GlueDatabaseUber:
-      Type: AWS::Glue::Database
-      Properties:
-        CatalogId: ${aws:accountId}
-        DatabaseInput:
-          Name: ${env:GLUE_DATABASE}
-
+#    GlueDatabaseUber:
+#      Type: AWS::Glue::Database
+#      Properties:
+#        CatalogId: ${aws:accountId}
+#        DatabaseInput:
+#          Name: ${env:GLUE_DATABASE}
+#
 
 
 
@@ -306,8 +306,8 @@ Glue:
   bucketDeploy: ${env:BUCKET}
   createBucket : true
   jobs:
-    - name: "create_hudi_table_template"
-      scriptPath: "./GLueJobs/create_hudi_table_template.py"
+    - name: "hudi_users"
+      scriptPath: "./GLueJobs/hudi_users.py"
       type: spark
       glueVersion: python3-4.0
       MaxConcurrentRuns: 5
@@ -318,13 +318,146 @@ Glue:
           job-bookmark-option: "job-bookmark-enable"
           datalake-formats: "hudi"
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+          ENABLE_CLEANER : "True"
+          ENABLE_HIVE_SYNC: "True"
+          ENABLE_PARTITION: "False"
+          GLUE_DATABASE: ${env:GLUE_DATABASE}
+          GLUE_TABLE_NAME: "users"
+          HUDI_PRECOMB_KEY: "user_id"
+          HUDI_RECORD_KEY: "user_id"
+          HUDI_TABLE_TYPE: "COPY_ON_WRITE"
+          ENABLE_DYNAMODB_LOCK: "False"
+          PARTITON_FIELDS: "default"
+          SOURCE_FILE_TYPE: "parquet"
+          SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=users/
+          TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=users/
+          INDEX_TYPE: "BLOOM"
+          USE_SQL_TRANSFORMER: "False"
+          SQL_TRANSFORMER_QUERY: "default"
       role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
       WorkerType: G.1X
       NumberOfWorkers: 15
       Timeout: 2880
       MaxRetries: 0
       SupportFiles:
-        - local_path: "./GLueJobs/create_hudi_table_template.py"
+        - local_path: "./GLueJobs/hudi_users.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+    - name: "hudi_rides"
+      scriptPath: "./GLueJobs/hudi_rides.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 5
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+          ENABLE_CLEANER : "True"
+          ENABLE_HIVE_SYNC: "True"
+          ENABLE_PARTITION: "False"
+          GLUE_DATABASE: ${env:GLUE_DATABASE}
+          GLUE_TABLE_NAME: "rides"
+          HUDI_PRECOMB_KEY: "ride_id"
+          HUDI_RECORD_KEY: "ride_id"
+          HUDI_TABLE_TYPE: "COPY_ON_WRITE"
+          ENABLE_DYNAMODB_LOCK: "False"
+          PARTITON_FIELDS: "default"
+          SOURCE_FILE_TYPE: "parquet"
+          SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=rides/
+          TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=rides/
+          INDEX_TYPE: "BLOOM"
+          USE_SQL_TRANSFORMER: "False"
+          SQL_TRANSFORMER_QUERY: "default"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 15
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/hudi_rides.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+    - name: "hudi_drivers"
+      scriptPath: "./GLueJobs/hudi_drivers.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 5
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+          ENABLE_CLEANER : "True"
+          ENABLE_HIVE_SYNC: "True"
+          ENABLE_PARTITION: "False"
+          GLUE_DATABASE: ${env:GLUE_DATABASE}
+          GLUE_TABLE_NAME: "drivers"
+          HUDI_PRECOMB_KEY: "driver_id"
+          HUDI_RECORD_KEY: "driver_id"
+          HUDI_TABLE_TYPE: "COPY_ON_WRITE"
+          ENABLE_DYNAMODB_LOCK: "False"
+          PARTITON_FIELDS: "default"
+          SOURCE_FILE_TYPE: "parquet"
+          SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=drivers/
+          TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=drivers/
+          INDEX_TYPE: "BLOOM"
+          USE_SQL_TRANSFORMER: "False"
+          SQL_TRANSFORMER_QUERY: "default"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 15
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/hudi_drivers.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
+
+    - name: "hudi_tips"
+      scriptPath: "./GLueJobs/hudi_tips.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 5
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+          ENABLE_CLEANER : "True"
+          ENABLE_HIVE_SYNC: "True"
+          ENABLE_PARTITION: "False"
+          GLUE_DATABASE: ${env:GLUE_DATABASE}
+          GLUE_TABLE_NAME: "tips"
+          HUDI_PRECOMB_KEY: "tip_id"
+          HUDI_RECORD_KEY: "tip_id"
+          HUDI_TABLE_TYPE: "COPY_ON_WRITE"
+          ENABLE_DYNAMODB_LOCK: "False"
+          PARTITON_FIELDS: "default"
+          SOURCE_FILE_TYPE: "parquet"
+          SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=tips/
+          TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=tips/
+          INDEX_TYPE: "BLOOM"
+          USE_SQL_TRANSFORMER: "False"
+          SQL_TRANSFORMER_QUERY: "default"
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 15
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/hudi_tips.py"
           s3_bucket: ${env:BUCKET}
           s3_prefix: ${env:s3_prefix_glue_script}
           execute_upload: True
@@ -413,3 +546,7 @@ Glue:
       actions:
         - name: "incremental_ingestion"
         - name: "save_points"
+        - name: "hudi_users"
+        - name: "hudi_rides"
+        - name: "hudi_drivers"
+        - name: "hudi_tips"

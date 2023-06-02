@@ -1,20 +1,13 @@
 
 # Install
 
+
+# Step 1 Create S3 Buckets
+
+# Step 2 Glone the Repo
+git clone
 npx serverless plugin install -n serverless-dotenv-plugin
 npx serverless plugin install -n serverless-python-requirements
 npx serverless plugin install -n serverless-glue
+npx sls deploy OR sls deploy
 
-
-
-{
-  "tip_id": {
-    "S": "1"
-  },
-  "ride_id": {
-    "S": "4"
-  },
-  "tip_amount": {
-    "S": "12.5"
-  }
-}
