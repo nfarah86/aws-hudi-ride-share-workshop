@@ -359,10 +359,10 @@ inc_tips_df = tips_helper.read()
 print("inc_tips_df")
 print(inc_tips_df.show(2))
 
+
+# ==============SnapShots ======================================================================================
 inc_rides_df.createOrReplaceTempView("rides")
 inc_tips_df.createOrReplaceTempView("tips")
-
-# ==============DATE DIM ======================================================================================
 spark.read.format("hudi").load(date_dimensions).createOrReplaceTempView("date_dim")
 # ================================================================================================================
 

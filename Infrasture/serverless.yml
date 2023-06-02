@@ -276,7 +276,9 @@ resources:
               Version: "2012-10-17"
               Statement:
                 - Action:
-                    - 'cloudwatch:PutMetricData'
+                    - 'logs:CreateLogGroup'
+                    - 'logs:CreateLogStream'
+                    - 'logs:PutLogEvents'
                   Effect: Allow
                   Resource: '*'
           - PolicyName: "IAMAccessPolicy"
@@ -289,7 +291,6 @@ resources:
                     - 'iam:GetRolePolicy'
                   Effect: Allow
                   Resource: '*'
-
 
     GlueDatabaseUber:
       Type: AWS::Glue::Database
@@ -363,6 +364,7 @@ Glue:
         jobBookmarkOption: "job-bookmark-enable"
         customArguments:
           BUCKET_NAME : ${env:BUCKET}
+          DATABASE_NAME : ${env:GLUE_DATABASE}
           job-bookmark-option: "job-bookmark-enable"
           datalake-formats: "hudi"
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
@@ -409,7 +411,5 @@ Glue:
       StartOnCreation: False
       schedule: 0 8 * * ? *
       actions:
-        - name: "create_hudi_table_template"
         - name: "incremental_ingestion"
-        - name: "date_dims"
         - name: "save_points"

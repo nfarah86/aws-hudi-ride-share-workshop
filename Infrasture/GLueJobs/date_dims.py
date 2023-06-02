@@ -36,7 +36,8 @@ curr_region = curr_session.region_name
 args = getResolvedOptions(
     sys.argv, [
         'JOB_NAME',
-        'BUCKET_NAME'
+        'BUCKET_NAME',
+        'DATABASE_NAME'
     ],
 )
 
@@ -113,11 +114,13 @@ date_data = [(int(day.strftime('%Y%m%d')), day.year, day.month, day.day, str((da
               day.strftime('%A'), day.weekday()) for day in date_range]
 date_schema = ['date_key', 'year', 'month', 'day', 'quarter', 'weekday', 'weekday_number']
 date_dim_df = spark.createDataFrame(date_data, schema=date_schema)
+print("****************")
+print(date_dim_df.show())
 
 # ================================================================================================================
 
 upsert_hudi_table(
-    db_name="uber",
+    db_name=args['DATABASE_NAME'],
     table_name="dim_date",
     record_id="date_key",
     precomb_key="date_key",

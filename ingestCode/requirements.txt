@@ -1,3 +1,4 @@
 Faker
 pynamodb
 python-dotenv
+boto3
