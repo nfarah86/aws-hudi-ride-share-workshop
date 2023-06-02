@@ -292,13 +292,13 @@ resources:
                   Effect: Allow
                   Resource: '*'
 
-#    GlueDatabaseUber:
-#      Type: AWS::Glue::Database
-#      Properties:
-#        CatalogId: ${aws:accountId}
-#        DatabaseInput:
-#          Name: ${env:GLUE_DATABASE}
-#
+    GlueDatabaseUber:
+      Type: AWS::Glue::Database
+      Properties:
+        CatalogId: ${aws:accountId}
+        DatabaseInput:
+          Name: ${env:GLUE_DATABASE}
+
 
 
 
