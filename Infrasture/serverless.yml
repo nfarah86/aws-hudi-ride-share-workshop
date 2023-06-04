@@ -336,7 +336,7 @@ Glue:
           SQL_TRANSFORMER_QUERY: "default"
       role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
       WorkerType: G.1X
-      NumberOfWorkers: 15
+      NumberOfWorkers: 10
       Timeout: 2880
       MaxRetries: 0
       SupportFiles:
@@ -414,7 +414,7 @@ Glue:
           SQL_TRANSFORMER_QUERY: "default"
       role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
       WorkerType: G.1X
-      NumberOfWorkers: 15
+      NumberOfWorkers: 10
       Timeout: 2880
       MaxRetries: 0
       SupportFiles:
@@ -453,7 +453,7 @@ Glue:
           SQL_TRANSFORMER_QUERY: "default"
       role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
       WorkerType: G.1X
-      NumberOfWorkers: 15
+      NumberOfWorkers: 10
       Timeout: 2880
       MaxRetries: 0
       SupportFiles:
