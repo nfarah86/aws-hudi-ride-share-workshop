@@ -537,7 +537,35 @@ Glue:
           s3_prefix: ${env:s3_prefix_glue_script}
           execute_upload: True
 
+    - name: "hudi_hard_delete"
+      scriptPath: "./GLueJobs/hudi_hard_delete.py"
+      type: spark
+      glueVersion: python3-4.0
+      MaxConcurrentRuns: 5
+      DefaultArguments:
+        enableGlueDatacatalog: True
+        jobBookmarkOption: "job-bookmark-enable"
+        customArguments:
+          job-bookmark-option: "job-bookmark-enable"
+          datalake-formats: "hudi"
+          conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
+          HUDI_PATH : "s3://XXXXXXXX/silver/table_name=users"
+          TABLE_NAME: "users"
+          HUDI_RECORD_ID_FIELD_NAME: "user_id"
+          HUDI_RECORD_ID_VALUE: "XXXXXXX"
+          PRECOMB_KEY: "created_at"
+          PARTITION_PATH : "state"
 
+      role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: "./GLueJobs/hudi_hard_delete.py"
+          s3_bucket: ${env:BUCKET}
+          s3_prefix: ${env:s3_prefix_glue_script}
+          execute_upload: True
   triggers:
     - name: ingestion-pipeline # Required
       Description: "Hudi ingestion pipeline"
