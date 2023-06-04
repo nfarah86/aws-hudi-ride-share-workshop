@@ -359,20 +359,20 @@ Glue:
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
           ENABLE_CLEANER : "True"
           ENABLE_HIVE_SYNC: "True"
-          ENABLE_PARTITION: "False"
+          ENABLE_PARTITION: "True"
           GLUE_DATABASE: ${env:GLUE_DATABASE}
           GLUE_TABLE_NAME: "rides"
           HUDI_PRECOMB_KEY: "ride_id"
           HUDI_RECORD_KEY: "ride_id"
           HUDI_TABLE_TYPE: "COPY_ON_WRITE"
           ENABLE_DYNAMODB_LOCK: "False"
-          PARTITON_FIELDS: "default"
+          PARTITON_FIELDS: "year,month,day"
           SOURCE_FILE_TYPE: "parquet"
           SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=rides/
           TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=rides/
           INDEX_TYPE: "BLOOM"
-          USE_SQL_TRANSFORMER: "False"
-          SQL_TRANSFORMER_QUERY: "default"
+          USE_SQL_TRANSFORMER: "True"
+          SQL_TRANSFORMER_QUERY: "SELECT *, extract(year from ride_date) as year, extract(month from ride_date) as month,extract(day from ride_date) as day FROM temp;   "
       role: arn:aws:iam::${aws:accountId}:role/GlueInteractiveSessionRole
       WorkerType: G.1X
       NumberOfWorkers: 15
