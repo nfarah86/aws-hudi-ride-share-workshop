@@ -318,16 +318,16 @@ Glue:
           job-bookmark-option: "job-bookmark-enable"
           datalake-formats: "hudi"
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
-          ENABLE_CLEANER : "True"
+          ENABLE_CLEANER : "False"
           ENABLE_HIVE_SYNC: "True"
-          ENABLE_PARTITION: "False"
+          ENABLE_PARTITION: "True"
           GLUE_DATABASE: ${env:GLUE_DATABASE}
           GLUE_TABLE_NAME: "users"
-          HUDI_PRECOMB_KEY: "user_id"
+          HUDI_PRECOMB_KEY: "created_at"
           HUDI_RECORD_KEY: "user_id"
           HUDI_TABLE_TYPE: "COPY_ON_WRITE"
           ENABLE_DYNAMODB_LOCK: "False"
-          PARTITON_FIELDS: "default"
+          PARTITON_FIELDS: "state"
           SOURCE_FILE_TYPE: "parquet"
           SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=users/
           TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=users/
@@ -398,14 +398,14 @@ Glue:
           conf: "spark.serializer=org.apache.spark.serializer.KryoSerializer  --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.hive.convertMetastoreParquet=false --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.legacy.pathOptionBehavior.enabled=true --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension"
           ENABLE_CLEANER : "True"
           ENABLE_HIVE_SYNC: "True"
-          ENABLE_PARTITION: "False"
+          ENABLE_PARTITION: "True"
           GLUE_DATABASE: ${env:GLUE_DATABASE}
           GLUE_TABLE_NAME: "drivers"
-          HUDI_PRECOMB_KEY: "driver_id"
+          HUDI_PRECOMB_KEY: "created_at"
           HUDI_RECORD_KEY: "driver_id"
           HUDI_TABLE_TYPE: "COPY_ON_WRITE"
           ENABLE_DYNAMODB_LOCK: "False"
-          PARTITON_FIELDS: "default"
+          PARTITON_FIELDS: "state"
           SOURCE_FILE_TYPE: "parquet"
           SOURCE_S3_PATH: s3://${env:BUCKET}/raw/table_name=drivers/
           TARGET_S3_PATH: s3://${env:BUCKET}/silver/table_name=drivers/
