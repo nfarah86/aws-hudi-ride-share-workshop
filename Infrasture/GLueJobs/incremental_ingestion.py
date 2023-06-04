@@ -390,7 +390,7 @@ if inc_rides_df.count() > 0:
 """)
 
     upsert_hudi_table(
-        db_name="uber",
+        db_name=args['DATABASE_NAME'],
         table_name="driver_earnings",
         record_id="driver_id,ride_id",
         precomb_key="ride_id",
