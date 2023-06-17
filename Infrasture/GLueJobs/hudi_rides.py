@@ -71,7 +71,9 @@ args = getResolvedOptions(
         "USE_SQL_TRANSFORMER",
         'SQL_TRANSFORMER_QUERY',  # comma was missing here
         'TARGET_S3_PATH',
-        'ENABLE_DYNAMODB_LOCK'
+        'ENABLE_DYNAMODB_LOCK',
+        'ENABLE_CLUSTERING',
+        'CLUSTERING_COLUMN',
 
     ],
 )
@@ -96,8 +98,8 @@ curr_region = curr_session.region_name
 
 def upsert_hudi_table(glue_database, table_name,
                       record_id, precomb_key, table_type, spark_df,
-                      enable_partition, enable_cleaner, enable_hive_sync, enable_dynamodb_lock,
-                      use_sql_transformer, sql_transformer_query,
+                      enable_partition, enable_cleaner, enable_hive_sync, enable_dynamodb_lock,enable_clustering,
+                      use_sql_transformer, sql_transformer_query, clustering_column,
                       target_path, index_type, method='upsert'):
     """
     Upserts a dataframe into a Hudi table.
@@ -179,14 +181,27 @@ def upsert_hudi_table(glue_database, table_name,
         "hoodie.parquet.small.file.limit": 104857600,  # 100MB
     }
 
+    hudi_clustering = {
+        "hoodie.clustering.execution.strategy.class": "org.apache.hudi.client.clustering.run.strategy.SparkSortAndSizeExecutionStrategy",
+        "hoodie.clustering.inline": "true",
+        "hoodie.clustering.plan.strategy.sort.columns": clustering_column,
+        "hoodie.clustering.plan.strategy.target.file.max.bytes": "1073741824",
+        "hoodie.clustering.plan.strategy.small.file.limit": "629145600"
+    }
+
     # Add the Hudi index settings to the final settings dictionary
     for key, value in hudi_index_settings.items():
         hudi_final_settings[key] = value  # Add the key-value pair to the final settings dictionary
+
+    if enable_clustering == True or enable_clustering == "True" or enable_clustering == "true":
+        for key, value in hudi_clustering.items():
+            hudi_final_settings[key] = value  # Add the key-value pair to the final settings dictionary
 
     for key, value in hudi_file_size.items():
         hudi_final_settings[key] = value
 
         # If partitioning is enabled, add the partition settings to the final settings
+
     if enable_partition == "True" or enable_partition == "true" or enable_partition == True:
         for key, value in partition_settings.items(): hudi_final_settings[key] = value
 
@@ -285,6 +300,9 @@ def run():
         sql_transformer_query=args.get('SQL_TRANSFORMER_QUERY', 'default'),
         target_path=args.get('TARGET_S3_PATH', ''),
         spark_df=spark_df,
+        enable_clustering=args.get('ENABLE_CLUSTERING', 'False'),
+        clustering_column=args.get('CLUSTERING_COLUMN', 'default'),
+
     )
 
     # Commit the job
