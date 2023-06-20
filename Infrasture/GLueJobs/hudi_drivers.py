@@ -248,7 +248,7 @@ def read_data_s3(path, format, table_name):
                 "paths": [path],
                 "recurse": True,
             },
-            # transformation_ctx=transformation_ctx,
+            transformation_ctx="drivers_ctx",
         )
 
         # convert dynamic frame to Spark DataFrame
