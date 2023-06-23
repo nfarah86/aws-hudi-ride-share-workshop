@@ -12,8 +12,7 @@ try:
     from pynamodb.connection import Connection
     from pynamodb.exceptions import PutError
     from dotenv import load_dotenv
-
-    load_dotenv("../Infrasture/.env")
+    load_dotenv("../infrastructure/.env")
 except Exception as e:
     print("Some Modules are missing Error :{} ".format(e))
 
